@@ -1,0 +1,66 @@
+# ============================================================
+# Federated TB X-Ray Classification — Master Config
+# ============================================================
+
+project:
+  name: "federated-tb-xray-classification"
+  seed: 42
+
+# ── Data ────────────────────────────────────────────────────
+data:
+  raw_dir: "data/raw"
+  splits_dir: "data/splits"
+  test_dir: "data/test"
+  classes:
+    - "Normal"
+    - "Tuberculosis"
+  test_split: 0.15        # 15% global held-out test set
+  val_split: 0.10         # 10% validation per node
+  img_size: 224
+  num_workers: 4
+
+# ── Model ───────────────────────────────────────────────────
+model:
+  backbone: "densenet121"
+  pretrained: true
+  num_classes: 2
+  dropout: 0.3
+
+# ── Training (shared for both centralised & federated) ──────
+training:
+  epochs_per_round: 3     # Local epochs each client trains per round
+  batch_size: 32
+  learning_rate: 0.0001
+  weight_decay: 0.0001
+  optimizer: "adam"
+  scheduler: "cosine"
+
+# ── Federated Learning ──────────────────────────────────────
+federated:
+  num_clients: 3
+  num_rounds: 20
+  fraction_fit: 1.0       # fraction of clients used per round
+  fraction_evaluate: 1.0
+  min_fit_clients: 3
+  min_evaluate_clients: 3
+  strategy: "fedprox"
+  fedprox_mu: 0.01        # proximal term strength
+
+# ── Differential Privacy ────────────────────────────────────
+privacy:
+  enabled: true
+  epsilon: 1.0
+  delta: 1.0e-5
+  max_grad_norm: 1.0      # gradient clipping
+
+# ── Centralised Baseline ────────────────────────────────────
+centralized:
+  epochs: 30
+  early_stopping_patience: 5
+
+# ── Results & Logging ───────────────────────────────────────
+results:
+  logs_dir: "results/logs"
+  plots_dir: "results/plots"
+  checkpoints_dir: "results/checkpoints"
+  exports_dir: "exports"
